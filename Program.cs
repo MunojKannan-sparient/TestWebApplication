@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TestWebApplication.Data;
+using TestWebApplication.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddDbContext<BlogDBContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("BlogDBConnectionString")));
+builder.Services.AddScoped<ITagRepository, TagRepository>();
 
 var app = builder.Build();
 

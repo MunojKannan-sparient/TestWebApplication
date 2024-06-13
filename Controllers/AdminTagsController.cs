@@ -1,16 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TestWebApplication.Data;
 using TestWebApplication.Models.Domain;
 using TestWebApplication.Models.ViewModels;
+using TestWebApplication.Repositories;
 
 namespace TestWebApplication.Controllers
 {
     public class AdminTagsController : Controller
     {
-        private BlogDBContext _blogDBContext;
-        public AdminTagsController(BlogDBContext blogDBContext)
+        private readonly ITagRepository tagRepository;
+
+        public AdminTagsController(ITagRepository tagRepository)
         {
-            _blogDBContext = blogDBContext;
+            this.tagRepository = tagRepository;
         }
 
         [HttpGet]
@@ -20,31 +23,30 @@ namespace TestWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult Add(AddTagRequest addTagRequest)
+        public async Task<IActionResult> Add(AddTagRequest addTagRequest)
         {
             var tag = new Tag
             {
                 Name = addTagRequest.Name,
                 DisplayName = addTagRequest.DisplayName
             };
-            _blogDBContext.Tags.Add(tag);
-            _blogDBContext.SaveChanges();
+            await tagRepository.AddAsync(tag);
             return RedirectToAction("List");
         }
 
         [HttpGet]
         [ActionName("List")]
-        public IActionResult List()
+        public async Task<IActionResult> List()
         {
-            var tags = _blogDBContext.Tags.ToList();
+            var tags = await tagRepository.GetAllAsync();
             return View(tags);
         }
 
         [HttpGet]
-        public IActionResult Edit(Guid id)
+        public async Task<IActionResult> Edit(Guid id)
         {
             //var tag=_blogDBContext.Tags.Find(id);
-            var tag = _blogDBContext.Tags.FirstOrDefault(x => x.Id == id);
+            var tag = await tagRepository.GetAsync(id);
             if (tag != null)
             {
                 var editTagRequest = new EditTagRequest
@@ -59,7 +61,7 @@ namespace TestWebApplication.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(EditTagRequest editTagRequest)
+        public async Task<IActionResult> Edit(EditTagRequest editTagRequest)
         {
             var tag = new Tag
             {
@@ -67,28 +69,22 @@ namespace TestWebApplication.Controllers
                 Name = editTagRequest.Name,
                 DisplayName = editTagRequest.DisplayName
             };
-            var existingTag = _blogDBContext.Tags.Find(tag.Id);
-            if (existingTag != null)
+            var updatedTag = await tagRepository.UpdateAsync(tag);
+            if (updatedTag != null)
             {
-                existingTag.Name = tag.Name;
-                existingTag.DisplayName = tag.DisplayName;
-                _blogDBContext.SaveChanges();
-                return RedirectToAction("List");
             }
             return RedirectToAction("Edit", new { id = editTagRequest.Id });
         }
 
         [HttpPost]
-        public IActionResult Delete(EditTagRequest editTagRequest)
+        public async Task<IActionResult> Delete(EditTagRequest editTagRequest)
         {
-            var tag = _blogDBContext.Tags.Find(editTagRequest.Id);
-            if (tag != null)
+            var deletedTag=await tagRepository.DeleteAsync(editTagRequest.Id);
+            if(deletedTag != null)
             {
-                _blogDBContext.Tags.Remove(tag);
-                _blogDBContext.SaveChanges();
                 return RedirectToAction("List");
             }
-            return RedirectToAction("Edit", new {id = editTagRequest.Id});
+            return RedirectToAction("Edit", new { id = editTagRequest.Id });
         }
     }
 }
