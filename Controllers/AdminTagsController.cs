@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TestWebApplication.Data;
 using TestWebApplication.Models.Domain;
@@ -7,6 +8,7 @@ using TestWebApplication.Repositories;
 
 namespace TestWebApplication.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminTagsController : Controller
     {
         private readonly ITagRepository tagRepository;
@@ -15,7 +17,7 @@ namespace TestWebApplication.Controllers
         {
             this.tagRepository = tagRepository;
         }
-
+                
         [HttpGet]
         public IActionResult Add()
         {
@@ -79,8 +81,8 @@ namespace TestWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(EditTagRequest editTagRequest)
         {
-            var deletedTag=await tagRepository.DeleteAsync(editTagRequest.Id);
-            if(deletedTag != null)
+            var deletedTag = await tagRepository.DeleteAsync(editTagRequest.Id);
+            if (deletedTag != null)
             {
                 return RedirectToAction("List");
             }

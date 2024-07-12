@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using TestWebApplication.Models.Domain;
 using TestWebApplication.Models.ViewModels;
@@ -6,6 +7,7 @@ using TestWebApplication.Repositories;
 
 namespace TestWebApplication.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class AdminBlogPostController : Controller
     {
         private readonly ITagRepository tagRepository;
