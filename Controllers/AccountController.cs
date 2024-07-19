@@ -4,13 +4,13 @@ using TestWebApplication.Models.ViewModels;
 
 namespace TestWebApplication.Controllers
 {
-   
+
     public class AccountController : Controller
     {
         private readonly UserManager<IdentityUser> userManager;
         private readonly SignInManager<IdentityUser> signInManager;
 
-        public AccountController(UserManager<IdentityUser> userManager,SignInManager<IdentityUser> signInManager)
+        public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
@@ -24,18 +24,21 @@ namespace TestWebApplication.Controllers
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel registerViewModel)
         {
-            var identityUser = new IdentityUser
+            if (ModelState.IsValid)
             {
-                UserName = registerViewModel.Username,
-                Email = registerViewModel.Email
-            };
-            var identityResult=await userManager.CreateAsync(identityUser,registerViewModel.Password);
-            if (identityResult.Succeeded)
-            {
-                var roleIdentityResult = await userManager.AddToRoleAsync(identityUser, "User");
-                if (roleIdentityResult.Succeeded)
+                var identityUser = new IdentityUser
                 {
-                    return RedirectToAction("Register");
+                    UserName = registerViewModel.Username,
+                    Email = registerViewModel.Email
+                };
+                var identityResult = await userManager.CreateAsync(identityUser, registerViewModel.Password);
+                if (identityResult.Succeeded)
+                {
+                    var roleIdentityResult = await userManager.AddToRoleAsync(identityUser, "User");
+                    if (roleIdentityResult.Succeeded)
+                    {
+                        return RedirectToAction("Register");
+                    }
                 }
             }
             return View();
@@ -48,20 +51,23 @@ namespace TestWebApplication.Controllers
             {
                 ReturnUrl = returnUrl
             };
-            return View(model);  
+            return View(model);
         }
 
         [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel loginViewModel)
         {
-            var signInResult=await signInManager.PasswordSignInAsync(loginViewModel.Username, loginViewModel.Password, false, false);
-            if (signInResult!=null && signInResult.Succeeded)
+            if (ModelState.IsValid)
             {
-                if (!string.IsNullOrWhiteSpace(loginViewModel.ReturnUrl))
+                var signInResult = await signInManager.PasswordSignInAsync(loginViewModel.Username, loginViewModel.Password, false, false);
+                if (signInResult != null && signInResult.Succeeded)
                 {
-                    return Redirect(loginViewModel.ReturnUrl);
+                    if (!string.IsNullOrWhiteSpace(loginViewModel.ReturnUrl))
+                    {
+                        return Redirect(loginViewModel.ReturnUrl);
+                    }
+                    return RedirectToAction("Index", "Home");
                 }
-                return RedirectToAction("Index", "Home");
             }
             return View();
         }
